@@ -1,10 +1,10 @@
-Mouse Action Recorder & Player
+# Mouse Action Recorder & Player🐁
 
-Resumen
+## Resumen
 Aplicación de escritorio que permite grabar y reproducir automáticamente las acciones del mouse (movimientos, clics y scroll). 
 Ideal para automatizar tareas repetitivas, testing de interfaces, demostraciones o cualquier flujo de trabajo que requiera replicar secuencias exactas de interacciones con el mouse.
 
-Features
+## Features
 Grabación completa de acciones: Captura movimientos, clics (izquierdo/derecho) y scroll del mouse
 Reproducción personalizable:
   Número configurable de repeticiones (1-100)
@@ -17,12 +17,14 @@ Interfaz intuitiva: GUI con Tkinter que muestra lista detallada de acciones grab
 Timestamps precisos: Reproduce el timing exacto entre acciones
 Threading seguro: Reproducción en hilos separados sin bloquear la interfaz
 
-Librerías
-Principales
+## Librerías
+### Principales
   tkinter: Interfaz gráfica de usuario
   pynput: Captura y control de mouse/teclado
   threading: Ejecución concurrente de reproducción
   json: Serialización de datos de acciones
-Estándar de Python
+### Estándar de Python
   time: Manejo de timestamps y delays
   os: Operaciones del sistema
+
+  ![Captura](Captura.png)
