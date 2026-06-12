@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog  # Agregado filedialog aquí arriba
 import threading
 import time
 import json
@@ -16,6 +16,9 @@ class MouseRecorder:
         self.root.geometry("500x400")
         self.root.resizable(False, False)
         
+        # SOLUCIÓN: Hace que la ventana se mantenga siempre al frente
+        self.root.attributes("-topmost", True)
+        
         # Variables
         self.recording = False
         self.actions = []
@@ -24,7 +27,7 @@ class MouseRecorder:
         self.keyboard_listener = None
         self.reproducing = False
         self.stop_reproduction = False
-        self.reproduction_keyboard_listener = None  # Nuevo listener para reproducción
+        self.reproduction_keyboard_listener = None  
         
         self.setup_ui()
         
@@ -35,7 +38,7 @@ class MouseRecorder:
         
         # Título
         title_label = ttk.Label(main_frame, text="Grabador de Acciones del Mouse", 
-                               font=("Arial", 16, "bold"))
+                                font=("Arial", 16, "bold"))
         title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
         
         # Frame de grabación
@@ -43,7 +46,7 @@ class MouseRecorder:
         record_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
         
         self.record_button = ttk.Button(record_frame, text="Iniciar Grabación", 
-                                       command=self.toggle_recording)
+                                        command=self.toggle_recording)
         self.record_button.grid(row=0, column=0, padx=(0, 10))
         
         self.status_label = ttk.Label(record_frame, text="Listo para grabar")
@@ -51,8 +54,8 @@ class MouseRecorder:
         
         # Información de grabación
         info_label = ttk.Label(record_frame, 
-                              text="Presiona F9 para detener la grabación", 
-                              font=("Arial", 8))
+                               text="Presiona F9 para detener la grabación", 
+                               font=("Arial", 8))
         info_label.grid(row=1, column=0, columnspan=2, pady=(5, 0))
         
         # Frame de reproducción
@@ -63,39 +66,39 @@ class MouseRecorder:
         ttk.Label(play_frame, text="Repeticiones:").grid(row=0, column=0, sticky=tk.W)
         self.repeat_var = tk.StringVar(value="1")
         repeat_spinbox = ttk.Spinbox(play_frame, from_=1, to=100, width=10, 
-                                    textvariable=self.repeat_var)
+                                     textvariable=self.repeat_var)
         repeat_spinbox.grid(row=0, column=1, padx=(5, 0), sticky=tk.W)
         
-        # Velocidad de reproducción
+        # SOLUCIÓN: Velocidad con 1.0x por defecto en el centro (Rango 0.1 a 1.9)
         ttk.Label(play_frame, text="Velocidad:").grid(row=1, column=0, sticky=tk.W, pady=(10, 0))
         self.speed_var = tk.DoubleVar(value=1.0)
-        self.speed_scale = ttk.Scale(play_frame, from_=0.1, to=5.0, 
-                                    variable=self.speed_var, orient=tk.HORIZONTAL, 
-                                    length=200)
+        self.speed_scale = ttk.Scale(play_frame, from_=0.1, to=1.9, 
+                                     variable=self.speed_var, orient=tk.HORIZONTAL, 
+                                     length=200)
         self.speed_scale.grid(row=1, column=1, padx=(5, 0), pady=(10, 0), sticky=(tk.W, tk.E))
         
         self.speed_label = ttk.Label(play_frame, text="1.0x")
         self.speed_label.grid(row=1, column=2, padx=(5, 0), pady=(10, 0))
         
         # Actualizar etiqueta de velocidad
-        self.speed_var.trace('w', self.update_speed_label)
+        self.speed_var.trace_add('write', self.update_speed_label)
         
         # Botones de reproducción
         button_frame = ttk.Frame(play_frame)
         button_frame.grid(row=2, column=0, columnspan=3, pady=(15, 0))
         
         self.play_button = ttk.Button(button_frame, text="Reproducir", 
-                                     command=self.start_reproduction)
+                                      command=self.start_reproduction)
         self.play_button.grid(row=0, column=0, padx=(0, 10))
         
         self.stop_button = ttk.Button(button_frame, text="Detener", 
-                                     command=self.stop_reproduction_func, state=tk.DISABLED)
+                                      command=self.stop_reproduction_func, state=tk.DISABLED)
         self.stop_button.grid(row=0, column=1)
         
-        # Información de reproducción - MODIFICADO
+        # Información de reproducción
         info_reproduction_label = ttk.Label(play_frame, 
-                                          text="Durante la reproducción: F9 o ESPACIO para detener", 
-                                          font=("Arial", 8))
+                                            text="Durante la reproducción: F9 o ESPACIO para detener", 
+                                            font=("Arial", 8))
         info_reproduction_label.grid(row=3, column=0, columnspan=3, pady=(5, 0))
         
         # Frame de archivo
@@ -119,7 +122,7 @@ class MouseRecorder:
         
         # Botón limpiar
         ttk.Button(list_frame, text="Limpiar Lista", 
-                  command=self.clear_actions).grid(row=1, column=0, pady=(10, 0))
+                   command=self.clear_actions).grid(row=1, column=0, pady=(10, 0))
         
         # Configurar grid weights
         main_frame.columnconfigure(1, weight=1)
@@ -204,12 +207,10 @@ class MouseRecorder:
                 'time': current_time
             })
     
-    # MODIFICADO: Función separada para el listener durante la grabación
     def on_key_press_recording(self, key):
         if key == Key.f9 and self.recording:
             self.stop_recording()
     
-    # NUEVO: Función separada para el listener durante la reproducción
     def on_key_press_reproduction(self, key):
         if key == Key.f9 or key == Key.space:
             if self.reproducing:
@@ -247,13 +248,11 @@ class MouseRecorder:
         self.play_button.config(state=tk.DISABLED)
         self.stop_button.config(state=tk.NORMAL)
         
-        # NUEVO: Iniciar listener de teclado para la reproducción
         self.reproduction_keyboard_listener = KeyboardListener(
             on_press=self.on_key_press_reproduction
         )
         self.reproduction_keyboard_listener.start()
         
-        # Iniciar reproducción en un hilo separado
         thread = threading.Thread(target=self.reproduce_actions, args=(repetitions,))
         thread.daemon = True
         thread.start()
@@ -276,12 +275,10 @@ class MouseRecorder:
                     if self.stop_reproduction:
                         break
                         
-                    # Calcular delay ajustado por velocidad
                     delay = (action['time'] - last_time) / speed_multiplier
                     if delay > 0:
                         time.sleep(delay)
                     
-                    # Ejecutar acción
                     if action['type'] == 'move':
                         mouse_controller.position = (action['x'], action['y'])
                     elif action['type'] == 'click':
@@ -310,27 +307,34 @@ class MouseRecorder:
         self.stop_button.config(state=tk.DISABLED)
         self.status_label.config(text="Reproducción completada")
         
-        # NUEVO: Detener el listener de teclado de reproducción
         if self.reproduction_keyboard_listener:
             self.reproduction_keyboard_listener.stop()
             self.reproduction_keyboard_listener = None
         
+    # SOLUCIÓN: Reescrita para evitar bloqueos por permisos de carpetas compartidas
     def save_actions(self):
         if not self.actions:
             messagebox.showwarning("Advertencia", "No hay acciones para guardar")
             return
             
         try:
-            filename = f"mouse_actions_{int(time.time())}.json"
-            with open(filename, 'w') as f:
-                json.dump(self.actions, f, indent=2)
-            messagebox.showinfo("Éxito", f"Acciones guardadas en {filename}")
+            # Abre una ventana nativa de guardado para que decidas la ubicación libre de restricciones
+            filename = filedialog.asksaveasfilename(
+                title="Guardar acciones",
+                defaultextension=".json",
+                filetypes=[("Archivos JSON", "*.json"), ("Todos los archivos", "*.*")],
+                initialfile=f"mouse_actions_{int(time.time())}.json"
+            )
+            
+            if filename:  # Si el usuario no cancela la ventana
+                with open(filename, 'w') as f:
+                    json.dump(self.actions, f, indent=2)
+                messagebox.showinfo("Éxito", f"Acciones guardadas correctamente en:\n{filename}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al guardar: {str(e)}")
             
     def load_actions(self):
         try:
-            from tkinter import filedialog
             filename = filedialog.askopenfilename(
                 title="Cargar acciones",
                 filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
@@ -358,15 +362,13 @@ class MouseRecorder:
             self.stop_recording()
         if self.reproducing:
             self.stop_reproduction_func()
-        
-        # NUEVO: Asegurar que todos los listeners se detengan
+            
         if self.reproduction_keyboard_listener:
             self.reproduction_keyboard_listener.stop()
             
         self.root.destroy()
 
 if __name__ == "__main__":
-    # Verificar dependencias
     try:
         import pynput
     except ImportError:
